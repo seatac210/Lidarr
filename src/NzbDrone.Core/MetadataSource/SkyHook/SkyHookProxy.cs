@@ -65,7 +65,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             return new HashSet<string>(httpResponse.Resource.Items);
         }
 
-        public Artist GetArtistInfo(string foreignArtistId, int metadataProfileId)
+        public Artist GetArtistInfo(string foreignArtistId, int metadataProfileId, List<ProfilePrimaryAlbumTypeItem> primaryOverrides = null, List<ProfileSecondaryAlbumTypeItem> secondaryOverrides = null, List<ProfileReleaseStatusItem> releaseOverrides = null)
         {
             _logger.Debug("Getting Artist with LidarrAPI.MetadataID of {0}", foreignArtistId);
 
@@ -103,7 +103,7 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             artist.CleanName = Parser.Parser.CleanArtistName(artist.Metadata.Value.Name);
             artist.SortName = Parser.Parser.NormalizeTitle(artist.Metadata.Value.Name);
 
-            artist.Albums = FilterAlbums(httpResponse.Resource.Albums, metadataProfileId)
+            artist.Albums = FilterAlbums(httpResponse.Resource.Albums, metadataProfileId, primaryOverrides, secondaryOverrides, releaseOverrides)
                 .Select(x => MapAlbum(x, null)).ToList();
 
             return artist;
@@ -134,12 +134,22 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             return new HashSet<string>(httpResponse.Resource.Items);
         }
 
-        public IEnumerable<AlbumResource> FilterAlbums(IEnumerable<AlbumResource> albums, int metadataProfileId)
+        public IEnumerable<AlbumResource> FilterAlbums(IEnumerable<AlbumResource> albums, int metadataProfileId, List<ProfilePrimaryAlbumTypeItem> primaryOverrides = null, List<ProfileSecondaryAlbumTypeItem> secondaryOverrides = null, List<ProfileReleaseStatusItem> releaseOverrides = null)
         {
             var metadataProfile = _metadataProfileService.Exists(metadataProfileId) ? _metadataProfileService.Get(metadataProfileId) : _metadataProfileService.All().First();
-            var primaryTypes = new HashSet<string>(metadataProfile.PrimaryAlbumTypes.Where(s => s.Allowed).Select(s => s.PrimaryAlbumType.Name));
-            var secondaryTypes = new HashSet<string>(metadataProfile.SecondaryAlbumTypes.Where(s => s.Allowed).Select(s => s.SecondaryAlbumType.Name));
-            var releaseStatuses = new HashSet<string>(metadataProfile.ReleaseStatuses.Where(s => s.Allowed).Select(s => s.ReleaseStatus.Name));
+
+            // Per-artist overrides supersede the metadata profile when provided.
+            var primaryTypes = new HashSet<string>(primaryOverrides != null
+                ? primaryOverrides.Where(s => s.Allowed).Select(s => s.PrimaryAlbumType.Name)
+                : metadataProfile.PrimaryAlbumTypes.Where(s => s.Allowed).Select(s => s.PrimaryAlbumType.Name));
+
+            var secondaryTypes = new HashSet<string>(secondaryOverrides != null
+                ? secondaryOverrides.Where(s => s.Allowed).Select(s => s.SecondaryAlbumType.Name)
+                : metadataProfile.SecondaryAlbumTypes.Where(s => s.Allowed).Select(s => s.SecondaryAlbumType.Name));
+
+            var releaseStatuses = new HashSet<string>(releaseOverrides != null
+                ? releaseOverrides.Where(s => s.Allowed).Select(s => s.ReleaseStatus.Name)
+                : metadataProfile.ReleaseStatuses.Where(s => s.Allowed).Select(s => s.ReleaseStatus.Name));
 
             return albums.Where(album => primaryTypes.Contains(album.Type) &&
                                 ((!album.SecondaryTypes.Any() && secondaryTypes.Contains("Studio")) ||

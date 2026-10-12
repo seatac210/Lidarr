@@ -135,7 +135,11 @@ namespace NzbDrone.Core.Profiles.Metadata
             {
                 _logger.Info("Setting up standard metadata profile");
 
-                AddDefaultProfile("Standard", new List<PrimaryAlbumType> { PrimaryAlbumType.Album }, new List<SecondaryAlbumType> { SecondaryAlbumType.Studio }, new List<ReleaseStatus> { ReleaseStatus.Official });
+                // Default: full studio albums + greatest hits (compilation) compilations,
+                // official release status only. Per-artist overrides can be applied later.
+                AddDefaultProfile("Standard", new List<PrimaryAlbumType> { PrimaryAlbumType.Album },
+                    new List<SecondaryAlbumType> { SecondaryAlbumType.Studio, SecondaryAlbumType.Compilation },
+                    new List<ReleaseStatus> { ReleaseStatus.Official });
             }
 
             if (emptyProfile != null)

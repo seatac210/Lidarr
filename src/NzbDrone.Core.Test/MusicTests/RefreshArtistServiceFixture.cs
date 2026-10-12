@@ -67,7 +67,7 @@ namespace NzbDrone.Core.Test.MusicTests
                 .Setup(s => s.InsertMany(It.IsAny<List<Album>>()));
 
             Mocker.GetMock<IProvideArtistInfo>()
-                  .Setup(s => s.GetArtistInfo(It.IsAny<string>(), It.IsAny<int>()))
+                  .Setup(s => s.GetArtistInfo(It.IsAny<string>(), It.IsAny<int>(), null, null, null))
                   .Callback(() => { throw new ArtistNotFoundException(_artist.ForeignArtistId); });
 
             Mocker.GetMock<IMediaFileService>()
@@ -98,7 +98,7 @@ namespace NzbDrone.Core.Test.MusicTests
         private void GivenNewArtistInfo(Artist artist)
         {
             Mocker.GetMock<IProvideArtistInfo>()
-                  .Setup(s => s.GetArtistInfo(_artist.ForeignArtistId, _artist.MetadataProfileId))
+                  .Setup(s => s.GetArtistInfo(_artist.ForeignArtistId, _artist.MetadataProfileId, null, null, null))
                   .Returns(artist);
         }
 
