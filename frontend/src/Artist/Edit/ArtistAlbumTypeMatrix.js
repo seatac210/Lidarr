@@ -35,66 +35,48 @@ const RELEASE_STATUSES = [
   { id: 3, name: 'Pseudo-Release' }
 ];
 
-function TypeGroup({ label, helpText, types, items, typeKey, defaultAllowedIds, onItemsChange }) {
-  // Build a map of type id -> allowed from the artist's override items (if present).
-  const allowedById = {};
-  if (items && items.length) {
-    items.forEach((item) => {
-      const type = item[typeKey];
-      if (type) {
-        allowedById[type.id] = !!item.allowed;
-      }
-    });
-  }
+// The album categories most relevant to a personal music library, mapped to
+// the underlying MusicBrainz secondary type id.
+const MAIN_CATEGORIES = [
+  { id: 0, label: 'Studio Albums' }, // Studio
+  { id: 1, label: 'Greatest Hits' }, // Compilation
+  { id: 6, label: 'Live Albums' } // Live
+];
 
-  const isAllowed = (type) => {
-    if (items && items.length) {
-      return !!allowedById[type.id];
+const MAIN_CATEGORY_IDS = MAIN_CATEGORIES.map((c) => c.id);
+const OTHER_SECONDARY_TYPES = SECONDARY_TYPES.filter((t) => !MAIN_CATEGORY_IDS.includes(t.id));
+
+function getAllowedById(items, typeKey) {
+  const map = {};
+  (items || []).forEach((item) => {
+    const type = item[typeKey];
+    if (type) {
+      map[type.id] = !!item.allowed;
     }
-    return defaultAllowedIds.includes(type.id);
-  };
+  });
+  return map;
+}
 
-  const onToggle = (type, value) => {
-    const newItems = types.map((t) => ({
-      [typeKey]: { id: t.id, name: t.name },
-      allowed: t.id === type.id ? value : isAllowed(t)
-    }));
-    onItemsChange(newItems);
-  };
-
+function CheckRow({ label, checked, name, onToggle }) {
   return (
-    <FormGroup>
-      <FormLabel>
-        {label}
-        {helpText ? <span style={{ fontWeight: 400 }}>{helpText}</span> : null}
-      </FormLabel>
-      <div>
-        {types.map((type) => (
-          <label
-            key={type.id}
-            style={{ display: 'inline-flex', alignItems: 'center', marginRight: 16 }}
-          >
-            <CheckInput
-              name={type.name}
-              value={isAllowed(type)}
-              onChange={({ value }) => onToggle(type, value)}
-            />
-            <span style={{ marginLeft: 4 }}>{type.name}</span>
-          </label>
-        ))}
-      </div>
-    </FormGroup>
+    <label
+      style={{ display: 'inline-flex', alignItems: 'center', marginRight: 16 }}
+    >
+      <CheckInput
+        name={name}
+        value={checked}
+        onChange={({ value }) => onToggle(value)}
+      />
+      <span style={{ marginLeft: 4 }}>{label}</span>
+    </label>
   );
 }
 
-TypeGroup.propTypes = {
+CheckRow.propTypes = {
   label: PropTypes.string.isRequired,
-  helpText: PropTypes.string,
-  types: PropTypes.arrayOf(PropTypes.object).isRequired,
-  items: PropTypes.arrayOf(PropTypes.object),
-  typeKey: PropTypes.string.isRequired,
-  defaultAllowedIds: PropTypes.arrayOf(PropTypes.number).isRequired,
-  onItemsChange: PropTypes.func.isRequired
+  checked: PropTypes.bool.isRequired,
+  name: PropTypes.string.isRequired,
+  onToggle: PropTypes.func.isRequired
 };
 
 function ArtistAlbumTypeMatrix(props) {
@@ -108,32 +90,130 @@ function ArtistAlbumTypeMatrix(props) {
     onItemsChange
   } = props;
 
+  const hasSecondary = !!(secondaryAlbumTypeOverrides && secondaryAlbumTypeOverrides.length);
+  const hasPrimary = !!(primaryAlbumTypeOverrides && primaryAlbumTypeOverrides.length);
+  const hasRelease = !!(releaseStatusOverrides && releaseStatusOverrides.length);
+
+  const secondaryAllowed = (typeId) => {
+    if (hasSecondary) {
+      return !!getAllowedById(secondaryAlbumTypeOverrides, 'secondaryAlbumType')[typeId];
+    }
+    return defaultSecondaryIds.includes(typeId);
+  };
+
+  const primaryAllowed = (typeId) => {
+    if (hasPrimary) {
+      return !!getAllowedById(primaryAlbumTypeOverrides, 'primaryAlbumType')[typeId];
+    }
+    return defaultPrimaryIds.includes(typeId);
+  };
+
+  const releaseAllowed = (typeId) => {
+    if (hasRelease) {
+      return !!getAllowedById(releaseStatusOverrides, 'releaseStatus')[typeId];
+    }
+    return defaultReleaseIds.includes(typeId);
+  };
+
+  const toggleSecondary = (typeId, value) => {
+    const allowed = getAllowedById(secondaryAlbumTypeOverrides, 'secondaryAlbumType');
+    const newList = SECONDARY_TYPES.map((t) => {
+      const fallback = hasSecondary ? !!allowed[t.id] : defaultSecondaryIds.includes(t.id);
+      const allow = t.id === typeId ? value : fallback;
+      return { secondaryAlbumType: { id: t.id, name: t.name }, allowed: allow };
+    });
+    onItemsChange('secondaryAlbumTypeOverrides', newList);
+  };
+
+  const togglePrimary = (typeId, value) => {
+    const allowed = getAllowedById(primaryAlbumTypeOverrides, 'primaryAlbumType');
+    const newList = PRIMARY_TYPES.map((t) => {
+      const fallback = hasPrimary ? !!allowed[t.id] : defaultPrimaryIds.includes(t.id);
+      const allow = t.id === typeId ? value : fallback;
+      return { primaryAlbumType: { id: t.id, name: t.name }, allowed: allow };
+    });
+    onItemsChange('primaryAlbumTypeOverrides', newList);
+  };
+
+  const toggleRelease = (typeId, value) => {
+    const allowed = getAllowedById(releaseStatusOverrides, 'releaseStatus');
+    const newList = RELEASE_STATUSES.map((t) => {
+      const fallback = hasRelease ? !!allowed[t.id] : defaultReleaseIds.includes(t.id);
+      const allow = t.id === typeId ? value : fallback;
+      return { releaseStatus: { id: t.id, name: t.name }, allowed: allow };
+    });
+    onItemsChange('releaseStatusOverrides', newList);
+  };
+
   return (
     <div>
-      <TypeGroup
-        label={translate('PrimaryAlbumTypes')}
-        types={PRIMARY_TYPES}
-        items={primaryAlbumTypeOverrides}
-        typeKey="primaryAlbumType"
-        defaultAllowedIds={defaultPrimaryIds}
-        onItemsChange={(items) => onItemsChange('primaryAlbumTypeOverrides', items)}
-      />
-      <TypeGroup
-        label={translate('SecondaryAlbumTypes')}
-        types={SECONDARY_TYPES}
-        items={secondaryAlbumTypeOverrides}
-        typeKey="secondaryAlbumType"
-        defaultAllowedIds={defaultSecondaryIds}
-        onItemsChange={(items) => onItemsChange('secondaryAlbumTypeOverrides', items)}
-      />
-      <TypeGroup
-        label={translate('ReleaseStatuses')}
-        types={RELEASE_STATUSES}
-        items={releaseStatusOverrides}
-        typeKey="releaseStatus"
-        defaultAllowedIds={defaultReleaseIds}
-        onItemsChange={(items) => onItemsChange('releaseStatusOverrides', items)}
-      />
+      <FormGroup>
+        <FormLabel>
+          Album Categories
+        </FormLabel>
+        <div>
+          {MAIN_CATEGORIES.map((cat) => (
+            <CheckRow
+              key={cat.id}
+              label={cat.label}
+              name={cat.label}
+              checked={secondaryAllowed(cat.id)}
+              onToggle={(value) => toggleSecondary(cat.id, value)}
+            />
+          ))}
+        </div>
+      </FormGroup>
+
+      <details style={{ marginTop: 8 }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 500, marginBottom: 4 }}>
+          Other album types
+        </summary>
+
+        <FormGroup>
+          <FormLabel>{translate('SecondaryAlbumTypes')}</FormLabel>
+          <div>
+            {OTHER_SECONDARY_TYPES.map((type) => (
+              <CheckRow
+                key={type.id}
+                label={type.name}
+                name={`secondary_${type.name}`}
+                checked={secondaryAllowed(type.id)}
+                onToggle={(value) => toggleSecondary(type.id, value)}
+              />
+            ))}
+          </div>
+        </FormGroup>
+
+        <FormGroup>
+          <FormLabel>{translate('PrimaryAlbumTypes')}</FormLabel>
+          <div>
+            {PRIMARY_TYPES.map((type) => (
+              <CheckRow
+                key={type.id}
+                label={type.name}
+                name={`primary_${type.name}`}
+                checked={primaryAllowed(type.id)}
+                onToggle={(value) => togglePrimary(type.id, value)}
+              />
+            ))}
+          </div>
+        </FormGroup>
+
+        <FormGroup>
+          <FormLabel>{translate('ReleaseStatuses')}</FormLabel>
+          <div>
+            {RELEASE_STATUSES.map((type) => (
+              <CheckRow
+                key={type.id}
+                label={type.name}
+                name={`release_${type.name}`}
+                checked={releaseAllowed(type.id)}
+                onToggle={(value) => toggleRelease(type.id, value)}
+              />
+            ))}
+          </div>
+        </FormGroup>
+      </details>
     </div>
   );
 }
