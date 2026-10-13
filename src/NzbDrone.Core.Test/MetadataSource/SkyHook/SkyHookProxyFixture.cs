@@ -153,6 +153,39 @@ namespace NzbDrone.Core.Test.MetadataSource.SkyHook
                    .Should().BeEquivalentTo(new List<string> { type.Name });
         }
 
+        [Test]
+        public void should_filter_albums_by_artist_overrides_when_provided()
+        {
+            var primaryOverrides = new List<ProfilePrimaryAlbumTypeItem>
+            {
+                new ProfilePrimaryAlbumTypeItem { PrimaryAlbumType = PrimaryAlbumType.Album, Allowed = true }
+            };
+
+            var secondaryOverrides = new List<ProfileSecondaryAlbumTypeItem>
+            {
+                new ProfileSecondaryAlbumTypeItem { SecondaryAlbumType = SecondaryAlbumType.Compilation, Allowed = true }
+            };
+
+            var releaseOverrides = new List<ProfileReleaseStatusItem>
+            {
+                new ProfileReleaseStatusItem { ReleaseStatus = ReleaseStatus.Official, Allowed = true }
+            };
+
+            // The profile here allows Studio only, so a Compilation-only result proves the override supersedes it.
+            var albums = GivenExampleAlbums();
+            var filtered = Subject.FilterAlbums(albums, 1, primaryOverrides, secondaryOverrides, releaseOverrides);
+
+            filtered.Select(x => x.Type).Distinct()
+                   .Should().BeEquivalentTo(new List<string> { "Album" });
+
+            filtered.SelectMany(x => x.SecondaryTypes.Select(SkyHookProxy.MapSecondaryTypes))
+                   .Select(x => x.Name).Distinct()
+                   .Should().BeEquivalentTo(new List<string> { "Compilation" });
+
+            filtered.SelectMany(x => x.ReleaseStatuses).Distinct()
+                   .Should().BeEquivalentTo(new List<string> { "Official" });
+        }
+
         [TestCase("12fa3845-7c62-36e5-a8da-8be137155a72", "Hysteria")]
         public void should_be_able_to_get_album_detail(string mbId, string name)
         {

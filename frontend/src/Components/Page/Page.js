@@ -112,7 +112,7 @@ class Page extends Component {
           />
 
           <AuthenticationRequiredModal
-            isOpen={!authenticationEnabled}
+            isOpen={false}
           />
         </div>
       </ColorImpairedContext.Provider>

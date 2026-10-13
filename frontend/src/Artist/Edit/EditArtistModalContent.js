@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ArtistMetadataProfilePopoverContent from 'AddArtist/ArtistMetadataProfilePopoverContent';
 import ArtistMonitorNewItemsOptionsPopoverContent from 'AddArtist/ArtistMonitorNewItemsOptionsPopoverContent';
+import ArtistAlbumTypeMatrix from 'Artist/Edit/ArtistAlbumTypeMatrix';
 import MoveArtistModal from 'Artist/MoveArtist/MoveArtistModal';
 import Form from 'Components/Form/Form';
 import FormGroup from 'Components/Form/FormGroup';
@@ -60,6 +61,10 @@ class EditArtistModalContent extends Component {
     this.props.onSavePress(true);
   };
 
+  onAlbumTypesChange = (name, value) => {
+    this.props.onInputChange({ name, value });
+  };
+
   //
   // Render
 
@@ -70,6 +75,9 @@ class EditArtistModalContent extends Component {
       isSaving,
       showMetadataProfile,
       originalPath,
+      defaultPrimaryIds,
+      defaultSecondaryIds,
+      defaultReleaseIds,
       onInputChange,
       onModalClose,
       onDeleteArtistPress,
@@ -81,6 +89,9 @@ class EditArtistModalContent extends Component {
       monitorNewItems,
       qualityProfileId,
       metadataProfileId,
+      primaryAlbumTypeOverrides,
+      secondaryAlbumTypeOverrides,
+      releaseStatusOverrides,
       path,
       tags
     } = item;
@@ -180,6 +191,22 @@ class EditArtistModalContent extends Component {
 
             <FormGroup size={sizes.MEDIUM}>
               <FormLabel>
+                {translate('AlbumTypesToFetch')}
+              </FormLabel>
+            </FormGroup>
+
+            <ArtistAlbumTypeMatrix
+              primaryAlbumTypeOverrides={primaryAlbumTypeOverrides && primaryAlbumTypeOverrides.value}
+              secondaryAlbumTypeOverrides={secondaryAlbumTypeOverrides && secondaryAlbumTypeOverrides.value}
+              releaseStatusOverrides={releaseStatusOverrides && releaseStatusOverrides.value}
+              defaultPrimaryIds={defaultPrimaryIds}
+              defaultSecondaryIds={defaultSecondaryIds}
+              defaultReleaseIds={defaultReleaseIds}
+              onItemsChange={this.onAlbumTypesChange}
+            />
+
+            <FormGroup size={sizes.MEDIUM}>
+              <FormLabel>
                 {translate('Path')}
               </FormLabel>
 
@@ -250,6 +277,9 @@ EditArtistModalContent.propTypes = {
   showMetadataProfile: PropTypes.bool.isRequired,
   isPathChanging: PropTypes.bool.isRequired,
   originalPath: PropTypes.string.isRequired,
+  defaultPrimaryIds: PropTypes.arrayOf(PropTypes.number),
+  defaultSecondaryIds: PropTypes.arrayOf(PropTypes.number),
+  defaultReleaseIds: PropTypes.arrayOf(PropTypes.number),
   onInputChange: PropTypes.func.isRequired,
   onSavePress: PropTypes.func.isRequired,
   onModalClose: PropTypes.func.isRequired,

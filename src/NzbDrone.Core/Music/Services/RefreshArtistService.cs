@@ -82,7 +82,7 @@ namespace NzbDrone.Core.Music
             var result = new RemoteData();
             try
             {
-                result.Entity = _artistInfo.GetArtistInfo(local.Metadata.Value.ForeignArtistId, local.MetadataProfileId);
+                result.Entity = _artistInfo.GetArtistInfo(local.Metadata.Value.ForeignArtistId, local.MetadataProfileId, local.PrimaryAlbumTypeOverrides, local.SecondaryAlbumTypeOverrides, local.ReleaseStatusOverrides);
                 result.Metadata = new List<ArtistMetadata> { result.Entity.Metadata.Value };
             }
             catch (ArtistNotFoundException)

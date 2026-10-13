@@ -29,6 +29,15 @@ namespace NzbDrone.Core.Music
         public int QualityProfileId { get; set; }
         public int MetadataProfileId { get; set; }
         public HashSet<int> Tags { get; set; }
+
+        // Per-artist album type overrides. When set, these supersede the metadata
+        // profile when deciding which album/release types are allowed for the artist.
+        [MemberwiseEqualityIgnore]
+        public List<ProfilePrimaryAlbumTypeItem> PrimaryAlbumTypeOverrides { get; set; }
+        [MemberwiseEqualityIgnore]
+        public List<ProfileSecondaryAlbumTypeItem> SecondaryAlbumTypeOverrides { get; set; }
+        [MemberwiseEqualityIgnore]
+        public List<ProfileReleaseStatusItem> ReleaseStatusOverrides { get; set; }
         [MemberwiseEqualityIgnore]
         public AddArtistOptions AddOptions { get; set; }
 
@@ -79,6 +88,9 @@ namespace NzbDrone.Core.Music
             QualityProfileId = other.QualityProfileId;
             MetadataProfileId = other.MetadataProfileId;
             Tags = other.Tags;
+            PrimaryAlbumTypeOverrides = other.PrimaryAlbumTypeOverrides;
+            SecondaryAlbumTypeOverrides = other.SecondaryAlbumTypeOverrides;
+            ReleaseStatusOverrides = other.ReleaseStatusOverrides;
             AddOptions = other.AddOptions;
         }
 
@@ -89,6 +101,10 @@ namespace NzbDrone.Core.Music
             QualityProfile = other.QualityProfile;
             MetadataProfileId = other.MetadataProfileId;
             MetadataProfile = other.MetadataProfile;
+
+            PrimaryAlbumTypeOverrides = other.PrimaryAlbumTypeOverrides;
+            SecondaryAlbumTypeOverrides = other.SecondaryAlbumTypeOverrides;
+            ReleaseStatusOverrides = other.ReleaseStatusOverrides;
 
             Albums = other.Albums;
             Tags = other.Tags;

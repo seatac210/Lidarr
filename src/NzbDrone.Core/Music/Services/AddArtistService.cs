@@ -124,7 +124,7 @@ namespace NzbDrone.Core.Music
 
             try
             {
-                artist = _artistInfo.GetArtistInfo(newArtist.Metadata.Value.ForeignArtistId, newArtist.MetadataProfileId);
+                artist = _artistInfo.GetArtistInfo(newArtist.Metadata.Value.ForeignArtistId, newArtist.MetadataProfileId, newArtist.PrimaryAlbumTypeOverrides, newArtist.SecondaryAlbumTypeOverrides, newArtist.ReleaseStatusOverrides);
             }
             catch (ArtistNotFoundException)
             {

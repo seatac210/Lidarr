@@ -42,9 +42,33 @@ function createMapStateToProps() {
         'monitorNewItems',
         'qualityProfileId',
         'metadataProfileId',
+        'primaryAlbumTypeOverrides',
+        'secondaryAlbumTypeOverrides',
+        'releaseStatusOverrides',
         'path',
         'tags'
       ]);
+
+      // Defaults shown in the album-type matrix: the allowed types of the artist's
+      // metadata profile, used when the artist has no per-artist overrides yet.
+      const targetProfile = metadataProfiles.items.find((p) => p.id === artist.metadataProfileId) ||
+        metadataProfiles.items[0] ||
+        {};
+
+      const defaultPrimaryIds = (targetProfile.primaryAlbumTypes || [])
+        .filter((t) => t.allowed)
+        .map((t) => (t.primaryAlbumType ? t.primaryAlbumType.id : null))
+        .filter((id) => id != null);
+
+      const defaultSecondaryIds = (targetProfile.secondaryAlbumTypes || [])
+        .filter((t) => t.allowed)
+        .map((t) => (t.secondaryAlbumType ? t.secondaryAlbumType.id : null))
+        .filter((id) => id != null);
+
+      const defaultReleaseIds = (targetProfile.releaseStatuses || [])
+        .filter((t) => t.allowed)
+        .map((t) => (t.releaseStatus ? t.releaseStatus.id : null))
+        .filter((id) => id != null);
 
       const settings = selectSettings(artistSettings, pendingChanges, saveError);
 
@@ -56,6 +80,9 @@ function createMapStateToProps() {
         originalPath: artist.path,
         item: settings.settings,
         showMetadataProfile: metadataProfiles.items.length > 1,
+        defaultPrimaryIds,
+        defaultSecondaryIds,
+        defaultReleaseIds,
         ...settings
       };
     }

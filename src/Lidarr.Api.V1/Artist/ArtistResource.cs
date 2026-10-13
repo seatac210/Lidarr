@@ -7,6 +7,7 @@ using Lidarr.Http.REST;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.MediaCover;
 using NzbDrone.Core.Music;
+using NzbDrone.Core.Profiles.Metadata;
 
 namespace Lidarr.Api.V1.Artist
 {
@@ -47,6 +48,9 @@ namespace Lidarr.Api.V1.Artist
         public string Path { get; set; }
         public int QualityProfileId { get; set; }
         public int MetadataProfileId { get; set; }
+        public List<ProfilePrimaryAlbumTypeItem> PrimaryAlbumTypeOverrides { get; set; }
+        public List<ProfileSecondaryAlbumTypeItem> SecondaryAlbumTypeOverrides { get; set; }
+        public List<ProfileReleaseStatusItem> ReleaseStatusOverrides { get; set; }
 
         // Editing Only
         public bool Monitored { get; set; }
@@ -94,6 +98,9 @@ namespace Lidarr.Api.V1.Artist
                 Path = model.Path,
                 QualityProfileId = model.QualityProfileId,
                 MetadataProfileId = model.MetadataProfileId,
+                PrimaryAlbumTypeOverrides = model.PrimaryAlbumTypeOverrides,
+                SecondaryAlbumTypeOverrides = model.SecondaryAlbumTypeOverrides,
+                ReleaseStatusOverrides = model.ReleaseStatusOverrides,
                 Links = model.Metadata.Value.Links,
 
                 Monitored = model.Monitored,
@@ -141,6 +148,9 @@ namespace Lidarr.Api.V1.Artist
                 Path = resource.Path,
                 QualityProfileId = resource.QualityProfileId,
                 MetadataProfileId = resource.MetadataProfileId,
+                PrimaryAlbumTypeOverrides = resource.PrimaryAlbumTypeOverrides,
+                SecondaryAlbumTypeOverrides = resource.SecondaryAlbumTypeOverrides,
+                ReleaseStatusOverrides = resource.ReleaseStatusOverrides,
 
                 Monitored = resource.Monitored,
                 MonitorNewItems = resource.MonitorNewItems,
